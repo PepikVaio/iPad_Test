@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Bindery Web – prototyp</title>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+<style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; line-height: 1.5; }
+    #drop { border: 2px dashed #999; padding: 30px; text-align: center; border-radius: 8px; margin-bottom: 15px; }
+    #drop.over { background: #f0f0f0; }
+    .row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    #files { margin: 15px 0; font-size: 14px; color: #444; white-space: pre-wrap; }
+    button { padding: 10px 20px; font-size: 15px; cursor: pointer; }
+    #log { white-space: pre-wrap; font-family: monospace; font-size: 13px; background: #f7f7f7; padding: 10px; margin-top: 15px; border-radius: 6px; min-height: 40px; }
+</style>
+</head>
+<body>
+
+<h2>Bindery – Web prototyp</h2>
+<p>Vyber celou složku <code>Book</code> (Pages, Styles, Fonts, Images) najednou, nebo soubory nahraj jednotlivě.</p>
+
+<div class="row">
+    <label>
+        <button type="button" onclick="document.getElementById('folderInput').click()">Vybrat složku</button>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+    </label>
+    <label>
+        <button type="button" onclick="document.getElementById('fileInput').click()">Vybrat soubory</button>
+        <input type="file" id="fileInput" multiple accept=".md,.css,.ttf,.otf,.png,.jpg,.jpeg" style="display:none">
+    </label>
+</div>
+
+<div id="drop">Nebo sem soubory/složku přetáhni</div>
+<div id="files">Zatím nic nenahráno.</div>
+
+<button id="generate" disabled>Vytvořit PDF</button>
+<div id="log"></div>
+
+<script>
+// ---------- Konstanty odpovídající Book/Styles/style_body.css ----------
+// CSS px v šablonách se bere jako standardních 96 px/in -> 1px = 0.75pt (72/96).
+const PX_TO_PT = 0.75;
+
+// ---------- 1) Sběr souborů ----------
+
+let loadedMd = {};       // name -> text
+let loadedCssText = "";  // spojený obsah .css (v pořadí: body, chapter, cover, font)
+let loadedFonts = {};    // 'header'|'paragraph'|'quote'|'subtitle' -> ArrayBuffer
+let loadedBackground = null; // ArrayBuffer cover.png
+
+const folderInput = document.getElementById("folderInput");
+const fileInput = document.getElementById("fileInput");
+const dropZone = document.getElementById("drop");
+const filesDiv = document.getElementById("files");
+const generateBtn = document.getElementById("generate");
+const log = document.getElementById("log");
+
+function print(msg) { log.textContent += msg + "\n"; }
+
+const FONT_ROLES = ["body", "chapter", "cover", "font"]; // pořadí = pořadí "cascade" při spojování CSS
+
+async function handleFiles(fileList) {
+    const cssByRole = {};
+
+    for (const file of fileList) {
+        const name = file.name;
+        const lower = name.toLowerCase();
+
+        if (lower.endsWith(".md")) {
+            loadedMd[name] = await file.text();
+        } else if (lower.endsWith(".css")) {
+            const role = FONT_ROLES.find((r) => lower.includes(r)) || "zzz";
+            cssByRole[role] = (cssByRole[role] || "") + "\n" + (await file.text());
+        } else if (lower.endsWith(".ttf") || lower.endsWith(".otf")) {
+            const key = lower.replace(/\.(ttf|otf)$/, "");
+            if (["header", "paragraph", "quote", "subtitle"].includes(key)) {
+                loadedFonts[key] = await file.arrayBuffer();
+            }
+        } else if ((lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")) && lower.includes("cover")) {
+            loadedBackground = { data: await file.arrayBuffer(), ext: lower.endsWith(".png") ? "png" : "jpeg" };
+        }
+    }
+
+    // spoj CSS v pevném pořadí, aby "cascade" (pozdější přepisuje dřívější) odpovídal reálnému chování
+    loadedCssText = FONT_ROLES.map((r) => cssByRole[r] || "").join("\n") + "\n" + (cssByRole["zzz"] || "");
+
+    renderFileList();
+}
+
+function renderFileList() {
+    const parts = [];
+    const mdCount = Object.keys(loadedMd).length;
+    const fontKeys = Object.keys(loadedFonts);
+
+    if (mdCount) parts.push(`${mdCount} MD souborů`);
+    if (loadedCssText.trim()) parts.push("CSS načteno");
+    if (fontKeys.length) parts.push(`fonty: ${fontKeys.join(", ")}`);
+    if (loadedBackground) parts.push("pozadí (cover.png) načteno");
+
+    filesDiv.textContent = parts.length ? parts.join(" · ") : "Zatím nic nenahráno.";
+    generateBtn.disabled = mdCount === 0;
+}
+
+folderInput.addEventListener("change", (e) => handleFiles(e.target.files));
+fileInput.addEventListener("change", (e) => handleFiles(e.target.files));
+
+dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("over"));
+dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("over");
+    handleFiles(e.dataTransfer.files);
+});
+
+
+// ---------- 2) description.md -> metadata ----------
+
+function parseDescription(markdownText) {
+    const sections = {};
+    let currentSection = null;
+    let currentLines = [];
+
+    for (const line of markdownText.split("\n")) {
+        const match = line.match(/^#\s+(.+?)\s*$/);
+        if (match) {
+            if (currentSection !== null) sections[currentSection] = currentLines.join("\n").trim();
+            currentSection = match[1].trim().toLowerCase();
+            currentLines = [];
+            continue;
+        }
+        if (currentSection !== null) currentLines.push(line);
+    }
+    if (currentSection !== null) sections[currentSection] = currentLines.join("\n").trim();
+
+    return {
+        title: sections["title"] || "book",
+        subtitle: sections["subtitle"] || "",
+        author: sections["author"] || ""
+    };
+}
+
+
+// ---------- 3) Čtení hodnot z CSS (jednoduchý cílený parser pro naši konkrétní šablonu) ----------
+
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+function getCssValue(cssText, selector, property, fallback) {
+    const blockRe = new RegExp(escapeRegex(selector) + "\\s*\\{([^}]*)\\}", "gi");
+    let match, lastValue = fallback;
+    while ((match = blockRe.exec(cssText)) !== null) {
+        const propRe = new RegExp(escapeRegex(property) + "\\s*:\\s*([^;]+);?", "i");
+        const propMatch = match[1].match(propRe);
+        if (propMatch) lastValue = propMatch[1].trim();
+    }
+    return lastValue;
+}
+
+function getRootVarPx(cssText, varName, fallback) {
+    const match = cssText.match(new RegExp("--" + varName + "\\s*:\\s*([\\d.]+)px", "i"));
+    return match ? parseFloat(match[1]) : fallback;
+}
+
+function px(cssText, selector, property, fallbackPx) {
+    const raw = getCssValue(cssText, selector, property, null);
+    if (!raw) return fallbackPx * PX_TO_PT;
+    const num = parseFloat(raw);
+    return isNaN(num) ? fallbackPx * PX_TO_PT : num * PX_TO_PT;
+}
+
+function color(cssText, selector, property, fallback) {
+    return getCssValue(cssText, selector, property, fallback);
+}
+
+
+// ---------- 4) Layout odvozený z CSS (page size, margins, styly) ----------
+
+function buildLayout(cssText) {
+    const pageWidthPx = getRootVarPx(cssText, "page_Width", 1241);
+    const pageHeightPx = getRootVarPx(cssText, "page_Height", 1755);
+    const bodyPaddingPx = getRootVarPx(cssText, "body_Padding", 50);
+
+    const pageWidth = pageWidthPx * PX_TO_PT;
+    const pageHeight = pageHeightPx * PX_TO_PT;
+    const margin = bodyPaddingPx * PX_TO_PT;
+
+    const docStyles = {
+        h1: { fontSize: px(cssText, "h1", "font-size", 60), bold: false, font: "Header", color: color(cssText, "h1, h2, h3, h4, h5, h6", "color", "black") },
+        h2: { fontSize: px(cssText, "h2", "font-size", 45), font: "Header", color: color(cssText, "h1, h2, h3, h4, h5, h6", "color", "black") },
+        paragraph: {
+            fontSize: px(cssText, "p", "font-size", 32),
+            font: "Paragraph",
+            color: color(cssText, "p", "color", "black"),
+            alignment: "justify",
+            lineHeight: parseFloat(getCssValue(cssText, "p", "line-height", "1.5")),
+            margin: [0, 0, 0, px(cssText, "p", "margin-bottom", 5)]
+        },
+        subtitle: { fontSize: px(cssText, "p", "font-size", 32), font: "Subtitle", color: color(cssText, ".subtitle", "color", "black") },
+        quote: { font: "Quote" },
+        coverTitle: { fontSize: px(cssText, "header h1", "font-size", 75), font: "Header", color: "black", margin: [0, 0, 0, 0] },
+        coverSubtitle: { fontSize: px(cssText, "header h2", "font-size", 40), font: "Subtitle", color: color(cssText, "header h2", "color", "#333333") },
+        coverAuthor: { fontSize: px(cssText, "footer p", "font-size", 50), font: "Paragraph", color: color(cssText, "footer p", "color", "#333333") }
+    };
+
+    const paragraphIndentPt = 60 * PX_TO_PT; // text-indent z p:nth-of-type(n+2)
+
+    return { pageWidth, pageHeight, margin, docStyles, paragraphIndentPt };
+}
+
+
+// ---------- 5) MD -> pdfmake content (podpora "citace" a > řádků jako v create_Chapter) ----------
+
+const SUB_MARK = "\u0001";
+const QUOTE_MARK = "\u0002";
+
+function preprocessMarkdown(markdownText) {
+    let text = markdownText.replace(/"([^"\n]+)"/g, QUOTE_MARK + '"$1"' + QUOTE_MARK);
+    text = text.replace(/^>\s*(.+)$/gm, SUB_MARK + "$1");
+    return text;
+}
+
+function splitQuoteRuns(text, baseFont) {
+    const segments = text.split(QUOTE_MARK);
+    return segments
+        .map((segment, index) => {
+            if (segment === "") return null;
+            const run = { text: segment };
+            if (index % 2 === 1) run.font = "Quote";
+            else if (baseFont) run.font = baseFont;
+            return run;
+        })
+        .filter(Boolean);
+}
+
+function inlineToPdfmakeRuns(tokens, baseFont) {
+    const runs = [];
+    for (const token of tokens) {
+        const raw = token.text ?? token.raw ?? "";
+        const parts = splitQuoteRuns(raw, baseFont);
+
+        for (const part of parts) {
+            if (token.type === "strong") part.bold = true;
+            if (token.type === "em") part.italics = true;
+            if (token.type === "codespan") part.font = "Courier";
+            runs.push(part);
+        }
+    }
+    return runs;
+}
+
+function markdownToPdfmakeContent(markdownText) {
+    const tokens = marked.lexer(preprocessMarkdown(markdownText));
+    const content = [];
+    let paragraphIndex = 0;
+
+    for (const token of tokens) {
+        if (token.type === "heading") {
+            const needsBreakBefore = token.depth === 1 && content.length > 0;
+            content.push({ text: token.text, style: `h${Math.min(token.depth, 2)}`, pageBreak: needsBreakBefore ? "before" : undefined });
+        } else if (token.type === "paragraph") {
+            const isSubtitleLine = token.text.startsWith(SUB_MARK);
+            const cleanText = token.text.replace(SUB_MARK, "");
+            const style = isSubtitleLine ? "subtitle" : "paragraph";
+            const baseFont = isSubtitleLine ? "Subtitle" : "Paragraph";
+
+            paragraphIndex++;
+            const node = { text: inlineToPdfmakeRuns(marked.lexer.inlineTokens ? marked.lexer(cleanText) : [{ text: cleanText, type: "text" }], baseFont), style };
+
+            if (!isSubtitleLine && paragraphIndex > 1) {
+                node.leadingIndent = true; // vlastní flag, viz níže
+            }
+            content.push(node);
+        } else if (token.type === "list") {
+            const items = token.items.map((item) => item.text);
+            content.push(token.ordered ? { ol: items, style: "paragraph" } : { ul: items, style: "paragraph" });
+        }
+    }
+
+    return content;
+}
+
+
+// ---------- 6) Fonty a pozadí -> pdfmake vfs/images ----------
+
+function arrayBufferToBase64(buffer) {
+    let binary = "";
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+}
+
+function registerFonts() {
+    const roleToFamily = { header: "Header", paragraph: "Paragraph", quote: "Quote", subtitle: "Subtitle" };
+
+    pdfMake.fonts = pdfMake.fonts || {};
+
+    for (const [role, buffer] of Object.entries(loadedFonts)) {
+        const family = roleToFamily[role];
+        const fileName = `${family}.ttf`;
+        pdfMake.vfs[fileName] = arrayBufferToBase64(buffer);
+        pdfMake.fonts[family] = { normal: fileName, bold: fileName, italics: fileName, bolditalics: fileName };
+    }
+}
+
+function backgroundImageDataUrl() {
+    if (!loadedBackground) return null;
+    return `data:image/${loadedBackground.ext};base64,` + arrayBufferToBase64(loadedBackground.data);
+}
+
+
+// ---------- 7) pdfmake -> ArrayBuffer ----------
+
+function renderPdfBuffer(docDefinition) {
+    return new Promise((resolve) => {
+        pdfMake.createPdf(docDefinition).getBuffer((buffer) => resolve(buffer));
+    });
+}
+
+function backgroundFn(bgDataUrl, opacity, layout) {
+    if (!bgDataUrl) return undefined;
+    return function () {
+        return { image: "bg", width: layout.pageWidth, height: layout.pageHeight, opacity, absolutePosition: { x: 0, y: 0 } };
+    };
+}
+
+function buildCoverDocDefinition(book, layout, bgDataUrl) {
+    return {
+        pageSize: { width: layout.pageWidth, height: layout.pageHeight },
+        pageMargins: [0, 0, 0, 0],
+        images: bgDataUrl ? { bg: bgDataUrl } : {},
+        background: backgroundFn(bgDataUrl, 1, layout),
+        content: [
+            { text: book.title, style: "coverTitle", alignment: "center", absolutePosition: { x: 0, y: layout.margin + 27 * PX_TO_PT }, width: layout.pageWidth },
+            book.subtitle ? { text: book.subtitle, style: "coverSubtitle", alignment: "center", absolutePosition: { x: 0, y: layout.margin + 27 * PX_TO_PT + layout.docStyles.coverTitle.fontSize + 20 }, width: layout.pageWidth } : {},
+            book.author ? { text: book.author, style: "coverAuthor", alignment: "center", absolutePosition: { x: 0, y: layout.pageHeight - layout.margin - layout.docStyles.coverAuthor.fontSize - 17 * PX_TO_PT }, width: layout.pageWidth } : {}
+        ],
+        styles: layout.docStyles
+    };
+}
+
+function buildChapterDocDefinition(markdownText, layout, bgDataUrl) {
+    const indentPt = layout.paragraphIndentPt;
+
+    // ruční post-processing "leadingIndent" flagu (pdfmake nemá text-indent jen pro první řádek)
+    const content = markdownToPdfmakeContent(markdownText).map((node) => {
+        if (node.leadingIndent) {
+            const clone = Object.assign({}, node);
+            delete clone.leadingIndent;
+            clone.margin = [indentPt, 0, 0, layout.docStyles.paragraph.margin[3]];
+            return clone;
+        }
+        return node;
+    });
+
+    return {
+        pageSize: { width: layout.pageWidth, height: layout.pageHeight },
+        pageMargins: [layout.margin, layout.margin, layout.margin, layout.margin],
+        images: bgDataUrl ? { bg: bgDataUrl } : {},
+        background: backgroundFn(bgDataUrl, 0.5, layout),
+        content,
+        styles: layout.docStyles
+    };
+}
+
+
+// ---------- 8) pdf-lib: sloučení + outline + metadata ----------
+
+async function mergeWithOutlineAndMetadata(coverBuffer, chapterEntries, book) {
+    const { PDFDocument, PDFArray, PDFString, PDFName, PDFNumber } = PDFLib;
+
+    const finalPdf = await PDFDocument.create();
+    finalPdf.setTitle(book.title);
+    if (book.author) finalPdf.setAuthor(book.author);
+    finalPdf.setCreator("Bindery Web");
+    finalPdf.setProducer("Bindery Web");
+    finalPdf.setCreationDate(new Date());
+
+    const coverDoc = await PDFDocument.load(coverBuffer);
+    const coverPages = await finalPdf.copyPages(coverDoc, coverDoc.getPageIndices());
+    coverPages.forEach((page) => finalPdf.addPage(page));
+
+    const chapterStarts = [];
+    for (const entry of chapterEntries) {
+        const chapterDoc = await PDFDocument.load(entry.buffer);
+        const pageIndex = finalPdf.getPageCount();
+        const pages = await finalPdf.copyPages(chapterDoc, chapterDoc.getPageIndices());
+        pages.forEach((page) => finalPdf.addPage(page));
+        chapterStarts.push({ title: entry.title, pageIndex });
+    }
+
+    if (chapterStarts.length > 0) {
+        const context = finalPdf.context;
+        const outlineItemRefs = chapterStarts.map(() => context.nextRef());
+        const outlinesRef = context.nextRef();
+
+        chapterStarts.forEach((chapter, index) => {
+            const pageRef = finalPdf.getPage(chapter.pageIndex).ref;
+            const dest = PDFArray.withContext(context);
+            dest.push(pageRef);
+            dest.push(PDFName.of("XYZ"));
+            dest.push(context.obj(null));
+            dest.push(context.obj(null));
+            dest.push(context.obj(null));
+
+            const dict = context.obj({ Title: PDFString.of(chapter.title), Parent: outlinesRef, Dest: dest });
+            if (index > 0) dict.set(PDFName.of("Prev"), outlineItemRefs[index - 1]);
+            if (index < outlineItemRefs.length - 1) dict.set(PDFName.of("Next"), outlineItemRefs[index + 1]);
+
+            context.assign(outlineItemRefs[index], dict);
+        });
+
+        const outlinesDict = context.obj({
+            Type: PDFName.of("Outlines"),
+            First: outlineItemRefs[0],
+            Last: outlineItemRefs[outlineItemRefs.length - 1],
+            Count: PDFNumber.of(outlineItemRefs.length)
+        });
+        context.assign(outlinesRef, outlinesDict);
+        finalPdf.catalog.set(PDFName.of("Outlines"), outlinesRef);
+    }
+
+    return finalPdf.save();
+}
+
+
+// ---------- 9) Hlavní tlačítko ----------
+
+generateBtn.addEventListener("click", async () => {
+    log.textContent = "";
+    generateBtn.disabled = true;
+
+    try {
+        const book = loadedMd["description.md"] ? parseDescription(loadedMd["description.md"]) : { title: "book", subtitle: "", author: "" };
+        print(`Kniha: "${book.title}" – ${book.author || "bez autora"}`);
+
+        const layout = buildLayout(loadedCssText);
+        print(`Stránka: ${Math.round(layout.pageWidth)}x${Math.round(layout.pageHeight)}pt, okraj ${Math.round(layout.margin)}pt`);
+
+        if (Object.keys(loadedFonts).length) {
+            print("Registruji fonty: " + Object.keys(loadedFonts).join(", "));
+            registerFonts();
+        } else {
+            print("Pozor: žádné fonty nenahrány, použije se výchozí Roboto.");
+        }
+
+        const bgDataUrl = backgroundImageDataUrl();
+
+        const chapterNames = Object.keys(loadedMd).filter((name) => /^chapter_\d+\.md$/i.test(name)).sort();
+        if (chapterNames.length === 0) {
+            print("Nenašel jsem žádné chapter_XX.md soubory.");
+            return;
+        }
+
+        print("Generuji obálku...");
+        const coverBuffer = await renderPdfBuffer(buildCoverDocDefinition(book, layout, bgDataUrl));
+
+        const chapterEntries = [];
+        for (const name of chapterNames) {
+            print(`Generuji ${name}...`);
+            const markdownText = loadedMd[name];
+            const firstHeading = markdownText.match(/^#\s+(.+)$/m);
+            const title = firstHeading ? firstHeading[1].trim() : name;
+            const buffer = await renderPdfBuffer(buildChapterDocDefinition(markdownText, layout, bgDataUrl));
+            chapterEntries.push({ title, buffer });
+        }
+
+        print("Slučuji kapitoly, přidávám obsah a metadata...");
+        const finalBytes = await mergeWithOutlineAndMetadata(coverBuffer, chapterEntries, book);
+
+        const blob = new Blob([finalBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${book.title || "book"}.pdf`;
+        a.click();
+
+        print("Hotovo, PDF staženo.");
+    } catch (error) {
+        print("Chyba: " + error.message);
+        console.error(error);
+    } finally {
+        generateBtn.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>
