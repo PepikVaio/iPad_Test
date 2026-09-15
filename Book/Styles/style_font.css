@@ -1,0 +1,27 @@
+/*
+ *   ___        _             _   _   _              
+ *  | __|__ _ _| |_   ___ ___| |_| |_(_)_ _  __ _ ___
+ *  | _/ _ \ ' \  _| (_-</ -_)  _|  _| | ' \/ _` (_-<
+ *  |_|\___/_||_\__| /__/\___|\__|\__|_|_||_\__, /__/
+ *                                          |___/    
+ */
+
+@font-face {
+    font-family: "Header";
+    src: url("../Fonts/header.ttf");
+}
+
+@font-face {
+    font-family: "Paragraph";
+    src: url("../Fonts/paragraph.ttf");
+}
+
+@font-face {
+    font-family: "Quote";
+    src: url("../Fonts/quote.ttf");
+}
+
+@font-face {
+    font-family: "Subtitle";
+    src: url("../Fonts/subtitle.ttf");
+}

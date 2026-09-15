@@ -1,0 +1,37 @@
+/*
+ *   ___          _                _   _   _              
+ *  | _ ) ___  __| |_  _   ___ ___| |_| |_(_)_ _  __ _ ___
+ *  | _ \/ _ \/ _` | || | (_-</ -_)  _|  _| | ' \/ _` (_-<
+ *  |___/\___/\__,_|\_, | /__/\___|\__|\__|_|_||_\__, /__/
+ *                  |__/                         |___/    
+ */
+
+body.chapter {
+    padding-top: var(--body_Padding);
+    box-decoration-break: clone;
+}
+
+h1 {
+    font-size: 60px;
+}
+
+h2 {
+    font-size: 45px;
+}
+
+p {
+    font-size: 32px;
+    line-height: 1.5;
+    margin-top: 5;
+    margin-bottom: 5px;
+    text-align: justify;
+}
+
+p:nth-of-type(n+2) {
+    text-indent: 60px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
