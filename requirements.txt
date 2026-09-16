@@ -1,6 +1,0 @@
-weasyprint
-markdown
-pypdf
-
-Flask
-gunicorn
