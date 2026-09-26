@@ -43,6 +43,6 @@ Druhý řádek.
 
 [Odkaz](https://commons.wikimedia.org/wiki/File:Lancia_Thema.jpg)
 
-![Obrázek](../Images/background1.png)
+![Obrázek](../Images/background.png)
 
-![Obrázek|50%](../Images/background1.png)
+![Obrázek|50%](../Images/background.png)
