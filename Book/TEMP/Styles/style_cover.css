@@ -14,7 +14,7 @@
 }
 
 .cover .background {
-    background-image: url("../Images/{{FILE_COVER}}");
+    background-image: url("../Images/cover.png");
     opacity: 1;
 }
 

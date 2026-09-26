@@ -7,15 +7,15 @@
  */
 
 @page {
-    size: {{PAGE_WIDTH}}px {{PAGE_HEIGHT}}px;
+    size: 1404px 1872px;
 
     margin: 0;
     padding: 0;
 }
 
 body {
-    width: {{PAGE_WIDTH}}px;
-    height: {{PAGE_HEIGHT}}px;
+    width: 1404px;
+    height: 1872px;
 
     margin: 0;
     padding: 50px;
@@ -24,14 +24,14 @@ body {
 }
 
 body .background {
-    width: {{PAGE_WIDTH}}px;
-    height: {{PAGE_HEIGHT}}px;
+    width: 1404px;
+    height: 1872px;
     position: fixed;
     top: 0;
     left: 0;
     background-position: center center;
     background-repeat: no-repeat;
-    background-size: {{IMAGE_SIZE}};
+    background-size: contain;
     z-index: -1;
 }
 

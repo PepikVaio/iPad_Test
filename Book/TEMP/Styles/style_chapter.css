@@ -11,7 +11,7 @@
 }
 
 .chapter .background {
-    background-image: url("../Images/{{FILE_BACKGROUND}}");
+    background-image: url("../Images/background.png");
     opacity: 0.5;
 }
 
