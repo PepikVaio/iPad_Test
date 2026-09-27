@@ -8,7 +8,7 @@ Bindery lze používat několika způsoby:
 
 Princip práce s knihou je stejný. Kniha je uložena ve vlastní složce a Bindery z této složky načítá její obsah.
 
-# První spuštění
+## První spuštění
 
 Po spuštění Bindery je potřeba vybrat nebo vytvořit složku, ve které bude kniha uložena.
 
@@ -22,7 +22,7 @@ Například:
 
 Do této složky budou postupně přidány jednotlivé soubory knihy.
 
-# Základní princip
+## Základní princip
 
 Práce s Bindery je jednoduchá:
 
@@ -35,7 +35,7 @@ Práce s Bindery je jednoduchá:
 
 Jednotlivé části knihy jsou uloženy jako běžné soubory. Díky tomu je možné knihu upravovat i bez Bindery například pomocí běžného textového editoru.
 
-# Co je potřeba pro první knihu
+## Co je potřeba pro první knihu
 
 Pro první jednoduchou knihu stačí tři základní části:
 

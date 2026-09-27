@@ -2,7 +2,7 @@
 
 Expertní část je určena uživatelům, kteří chtějí pochopit, jak Bindery pracuje uvnitř, a případně upravit samotný proces generování knihy.
 
-# Struktura generování
+## Struktura generování
 
 Bindery pracuje s jednotlivými zdrojovými soubory a postupně je zpracovává.
 
@@ -22,7 +22,7 @@ Základní princip je:
 
 Výsledný dokument je vytvořen ze zdrojů uložených v projektu.
 
-# Formát stránky
+## Formát stránky
 
 Velikost stránky je možné určit pomocí nastavení knihy.
 
@@ -43,7 +43,7 @@ může mít nastaven vlastní rozměr odpovídající tomuto formátu.
 
 Velikost obálky sama o sobě neurčuje velikost stránky knihy.
 
-# CSS a @page
+## CSS a @page
 
 Velikost stránky výsledného dokumentu může být dále určena pomocí CSS.
 
@@ -57,7 +57,7 @@ Rozměry jsou zadány jako šířka a výška.
 
 Mezi hodnotami je mezera.
 
-# Templates
+## Templates
 
 Templates určují strukturu výsledného dokumentu.
 
@@ -65,7 +65,7 @@ Pomocí šablon lze ovlivnit například způsob, jakým Bindery skládá jednot
 
 Šablony jsou určeny především pro uživatele, kteří chtějí měnit výchozí způsob generování.
 
-# TEMP
+## TEMP
 
 Bindery při generování používá pracovní prostor TEMP.
 
@@ -75,7 +75,7 @@ Není potřeba do něj běžně zasahovat.
 
 Při řešení problémů nebo při vývoji Bindery však může být obsah TEMP užitečný pro kontrolu toho, co Bindery během generování vytvořil.
 
-# Výstupní formáty
+## Výstupní formáty
 
 Bindery může zpracovávat knihu pro různé typy výstupu.
 
@@ -91,7 +91,7 @@ Každý formát má vlastní požadavky na:
 
 Proto se může stejná kniha v různých výstupních formátech zobrazovat mírně odlišně.
 
-# Úprava celé knihy
+## Úprava celé knihy
 
 Expertní uživatel může upravovat jednotlivé části procesu.
 
@@ -108,7 +108,7 @@ Může například měnit:
 
 Tím lze Bindery přizpůsobit konkrétnímu typu knihy.
 
-# Úprava samotného Bindery
+## Úprava samotného Bindery
 
 Bindery není pouze sada souborů knihy.
 
@@ -128,7 +128,7 @@ Uživatel, který rozumí Pythonu a struktuře projektu, může změnit způsob,
 
 Tím se z Bindery může stát nejen nástroj pro vytváření knih, ale také základ pro vlastní publikační systém.
 
-# Úplná kontrola
+## Úplná kontrola
 
 Na expertní úrovni už uživatel pouze nevytváří knihu pomocí Bindery.
 

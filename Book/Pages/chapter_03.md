@@ -4,7 +4,7 @@ Tato kapitola vás provede vytvořením první knihy od úplného začátku až 
 
 Nebudeme řešit nic, co není pro první knihu potřeba.
 
-# 1. Vytvoření složky knihy
+## 1. Vytvoření složky knihy
 
 Nejdříve vytvořte novou složku.
 
@@ -14,7 +14,7 @@ Například:
 
 Tato složka bude obsahovat všechno, co ke knize patří.
 
-# 2. Vytvoření základní struktury
+## 2. Vytvoření základní struktury
 
 Ve složce vytvořte soubor:
 
@@ -32,7 +32,7 @@ Výsledná struktura bude:
     ├── Pages/
     └── Images/
 
-# 3. Vytvoření Description.md
+## 3. Vytvoření Description.md
 
 Soubor `Description.md` obsahuje základní informace o knize.
 
@@ -44,7 +44,7 @@ Soubor musí mít přesný název:
 
 Je důležité zachovat správný název souboru i jeho umístění v hlavní složce knihy.
 
-# 4. Vytvoření první stránky
+## 4. Vytvoření první stránky
 
 Otevřete složku `Pages`.
 
@@ -64,7 +64,7 @@ Do souboru napište:
 
 Soubor uložte.
 
-# 5. Jak pojmenovávat soubory
+## 5. Jak pojmenovávat soubory
 
 Jednotlivé části knihy ukládejte do složky `Pages`.
 
@@ -80,13 +80,13 @@ Například:
 
 Každý soubor obsahuje text jedné části knihy.
 
-# 6. Jak psát text
+## 6. Jak psát text
 
 Bindery používá Markdown.
 
 Markdown umožňuje jednoduchým způsobem určit například nadpisy, tučné písmo, kurzívu nebo seznamy.
 
-## Nadpis
+### Nadpis
 
 Nadpis vytvoříte pomocí znaku `#`:
 
@@ -96,21 +96,21 @@ Menší nadpis může vypadat například takto:
 
     ## Podnadpis
 
-## Tučné písmo
+### Tučné písmo
 
     **tučné písmo**
 
-## Kurzíva
+### Kurzíva
 
     *kurzíva*
 
-## Seznam
+### Seznam
 
     - první položka
     - druhá položka
     - třetí položka
 
-## Odstavce
+### Odstavce
 
 Jednotlivé odstavce oddělujte prázdným řádkem:
 
@@ -120,7 +120,7 @@ Jednotlivé odstavce oddělujte prázdným řádkem:
 
 Takto lze napsat celý text knihy.
 
-# 7. Přidání obrázků
+## 7. Přidání obrázků
 
 Obrázky patří do složky:
 
@@ -145,7 +145,7 @@ Například:
     obrazek_01.png
     diagram.png
 
-# 8. Vložení obrázku do textu
+## 8. Vložení obrázku do textu
 
 Obrázek lze vložit přímo do Markdown souboru.
 
@@ -155,7 +155,7 @@ Například:
 
 Cesta musí odpovídat skutečnému umístění obrázku.
 
-# 9. První kompletní kniha
+## 9. První kompletní kniha
 
 Po dokončení bude například struktura vypadat takto:
 
@@ -170,7 +170,7 @@ Po dokončení bude například struktura vypadat takto:
 
 Nyní máte připravené všechny základní části knihy.
 
-# 10. Vygenerování knihy
+## 10. Vygenerování knihy
 
 Otevřete Bindery a vyberte složku s knihou.
 
@@ -180,7 +180,7 @@ Spusťte generování.
 
 Bindery zpracuje jednotlivé Markdown soubory, obrázky a informace o knize a vytvoří výslednou knihu.
 
-# 11. Úprava knihy
+## 11. Úprava knihy
 
 Pokud chcete něco změnit, upravte příslušný soubor.
 

@@ -23,7 +23,7 @@ Základní používání nevyžaduje znalost programování.
 
 Stačí vytvořit obsah knihy, uložit jej do správné struktury a nechat Bindery knihu vygenerovat.
 
-# Jak Bindery pracuje
+## Jak Bindery pracuje
 
 Základem je složka s knihou.
 

@@ -4,7 +4,7 @@ Pokročilé možnosti Bindery umožňují upravit vzhled výsledné knihy.
 
 Tato část je určena uživatelům, kteří chtějí mít větší kontrolu nad typografií, písmem a vzhledem jednotlivých prvků.
 
-# Písma
+## Písma
 
 Bindery umožňuje používat vlastní písma.
 
@@ -21,7 +21,7 @@ Při používání vlastních fontů je potřeba zachovat jejich správné umís
 
 Podporované typy fontů závisí na konkrétním výstupním formátu a způsobu jejich použití.
 
-# CSS
+## CSS
 
 Vzhled knihy lze upravovat pomocí CSS.
 
@@ -41,7 +41,7 @@ Díky CSS není nutné měnit samotný text knihy pokaždé, když chcete upravi
 
 Text zůstává v Markdown souborech a vzhled je možné upravovat samostatně.
 
-# Proč používat vlastní CSS
+## Proč používat vlastní CSS
 
 Výchozí vzhled Bindery je vhodný pro vytvoření knihy bez nutnosti cokoli nastavovat.
 
