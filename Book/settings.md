@@ -2,7 +2,7 @@
 1404x1872px
 
 # Type
-book
+document
 
 # Image size
-contain
+cover

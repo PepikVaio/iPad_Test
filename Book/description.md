@@ -1,14 +1,15 @@
 # Title
-A Woman With No Past
+Bindery!
 
 # Subtitle
-Life is just memories
+Uživatelská příručka
 
 # Author
-Kateřina Šafářová
+Wajsar Josef
+
 
 # Series
-none
+
 
 # Number
 1.00
@@ -17,13 +18,13 @@ none
 *
 
 # Tags
-drama, romance, mystery
+návod, příručka, md
 
 # Identifier
-isbn:
+isbn: 
 
 # Published
-1/1/1900
+27/09/2026
 
 # Publisher
 pypdf, easyprint
@@ -31,8 +32,13 @@ pypdf, easyprint
 # Language
 cs
 
+
 # Description
 #### Popis knihy:
-A Woman With No Past vypráví příběh ženy, která se snaží pochopit svou minulost a události, které ovlivnily její život.
+Bindery je nástroj pro vytváření knih z textových souborů, obrázků a dalších podkladů.
 
-Další text, kdybych potřeboval...
+Je určený jak pro uživatele, kteří chtějí jednoduše napsat a vytvořit vlastní knihu, tak pro pokročilé uživatele, kteří chtějí ovlivnit její vzhled a způsob generování.
+
+Kniha je v Bindery tvořena především pomocí souborů Markdown. Text knihy je rozdělen do jednotlivých stránek nebo kapitol a obrázky jsou uloženy samostatně.
+
+Bindery z těchto souborů vytvoří výslednou knihu.

@@ -1,20 +1,41 @@
-# Druhá kapitola
+# Co je Bindery
 
-![Popis obrázku|15%](../Images/background.png)
-![Popis obrázku|15%](../Images/background.png)
+Bindery je nástroj pro vytváření knih z textových souborů, obrázků a dalších podkladů.
 
+Je určený jak pro uživatele, kteří chtějí jednoduše napsat a vytvořit vlastní knihu, tak pro pokročilé uživatele, kteří chtějí ovlivnit její vzhled a způsob generování.
 
-![Popis obrázku|15%](../Images/background.png)
+Kniha je v Bindery tvořena především pomocí souborů Markdown. Text knihy je rozdělen do jednotlivých stránek nebo kapitol a obrázky jsou uloženy samostatně.
 
-![Popis obrázku|15%](../Images/background.png)
+Bindery z těchto souborů vytvoří výslednou knihu.
 
+## Pro koho je Bindery určen
 
+Bindery může používat například:
 
+- autor knihy,
+- člověk vytvářející dokumentaci,
+- technický dokumentátor,
+- uživatel vytvářející elektronickou knihu,
+- pokročilý uživatel, který chce mít kontrolu nad vzhledem knihy,
+- vývojář, který chce Bindery dále upravovat.
 
+Základní používání nevyžaduje znalost programování.
 
-![Popis obrázku|15%](../Images/background.png)
-Toto je delší testovací text určený pro ověření vzhledu dokumentu, velikosti písma, řádkování a chování jednotlivých odstavců. Text obsahuje několik vět různé délky, aby bylo možné snadno posoudit, jak se jednotlivé řádky zalamují a jak velké mezery vznikají mezi odstavci.
+Stačí vytvořit obsah knihy, uložit jej do správné struktury a nechat Bindery knihu vygenerovat.
 
-![Popis obrázku|15%](../Images/background.png)
+# Jak Bindery pracuje
 
-Toto je delší testovací text určený pro ověření vzhledu dokumentu, velikosti písma, řádkování a chování jednotlivých odstavců. Text obsahuje několik vět různé délky, aby bylo možné snadno posoudit, jak se jednotlivé řádky zalamují a jak velké mezery vznikají mezi odstavci.
+Základem je složka s knihou.
+
+V ní jsou uloženy informace o knize, text jednotlivých částí a obrázky.
+
+Například:
+
+    MojeKniha/
+    ├── Description.md
+    ├── Pages/
+    └── Images/
+
+Bindery tuto strukturu načte a použije ji jako zdroj pro vytvoření výsledné knihy.
+
+Čím pokročilejší uživatel je, tím více částí procesu může ovlivnit.
